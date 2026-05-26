@@ -1,27 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function DeliveryPage() {
-
-  const [carrinho, setCarrinho] = useState<any[]>([]);
+  // CORREÇÃO: O estado agora é inicializado lendo diretamente o localStorage de forma segura para o Next.js (SSR)
+  const [carrinho, setCarrinho] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      const dados = localStorage.getItem("carrinho");
+      return dados ? JSON.parse(dados) : [];
+    }
+    return [];
+  });
 
   const [bairro, setBairro] = useState("");
 
   const [nome, setNome] = useState("");
 
   const [endereco, setEndereco] = useState("");
-
-  useEffect(() => {
-
-    const dados = localStorage.getItem("carrinho");
-
-    if(dados){
-      setCarrinho(JSON.parse(dados));
-    }
-
-  }, []);
-
+  
   const subtotal = carrinho.reduce(
     (acc, item) => acc + item.preco,
     0
@@ -29,25 +25,23 @@ export default function DeliveryPage() {
 
   let taxaEntrega = 4.99;
 
-  if(
+  if (
     bairro.toLowerCase().includes("centro")
-  ){
+  ) {
     taxaEntrega = 5;
   }
-  else if(bairro !== "Sul"){
+  else if (bairro !== "" && bairro !== "Sul") { // Pequeno ajuste para não cobrar taxa cheia se o campo estiver vazio
     taxaEntrega = 7.99;
   }
 
   const total = subtotal + taxaEntrega;
 
-  function finalizarPedido(){
-
-    if(
+  function finalizarPedido() {
+    if (
       nome.trim() === "" ||
       endereco.trim() === "" ||
       bairro.trim() === ""
-    ){
-
+    ) {
       alert(
         "Preencha todos os campos para finalizar o pedido."
       );
@@ -55,13 +49,13 @@ export default function DeliveryPage() {
       return;
     }
 
-    if(carrinho.length === 0){
-
+    if (carrinho.length === 0) {
       alert(
         "Seu carrinho está vazio."
       );
 
       return;
+
     }
 
     alert(
@@ -73,9 +67,12 @@ export default function DeliveryPage() {
     setCarrinho([]);
 
     setNome("");
-
+    
     setEndereco("");
+
+    setBairro(""); // Limpa também o bairro após finalizar
   }
+
   return (
 
     <main className="delivery-page">
@@ -94,6 +91,7 @@ export default function DeliveryPage() {
 
       <section className="delivery-layout">
 
+
         {/* PRODUTOS */}
 
         <div className="delivery-products">
@@ -101,7 +99,7 @@ export default function DeliveryPage() {
           {carrinho.length === 0 ? (
 
             <div className="food-card">
-
+              
               <div className="food-content">
 
                 <h2>
@@ -187,7 +185,7 @@ export default function DeliveryPage() {
             className="delivery-input"
             placeholder="Seu nome"
             value={nome}
-            onChange={(e)=>
+            onChange={(e) =>
               setNome(e.target.value)
             }
           />
@@ -196,7 +194,7 @@ export default function DeliveryPage() {
             className="delivery-input"
             placeholder="Seu endereço"
             value={endereco}
-            onChange={(e)=>
+            onChange={(e) =>
               setEndereco(e.target.value)
             }
           />
@@ -205,7 +203,7 @@ export default function DeliveryPage() {
             className="delivery-input"
             placeholder="Seu bairro"
             value={bairro}
-            onChange={(e)=>
+            onChange={(e) =>
               setBairro(e.target.value)
             }
           />
@@ -220,6 +218,7 @@ export default function DeliveryPage() {
         </aside>
 
       </section>
+
 
     </main>
 
